@@ -37,7 +37,7 @@ cdef extern from 'string.h':
     void *memcpy(void *dest, void *src, int n)
 
 class Volume(object):
-    def __init__(self, size, device):
+    def __init__(self, size, device='/dev/nbd0'):
         self.socketpair = socket.socketpair()
         self.nbd = os.open(device, os.O_RDWR)
         ioctl(self.nbd, NBD_SET_BLKSIZE, <unsigned long>BLOCK_SIZE)

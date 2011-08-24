@@ -13,6 +13,7 @@ NBD_REPLY_MAGIC = 0x67446698
 NBD_CMD_READ = 0
 NBD_CMD_WRITE = 1
 NBD_CMD_DISC = 2
+REQUEST_LEN = struct.calcsize('!II8sQI')
 
 NBD_SET_BLKSIZE = 43777
 NBD_SET_SIZE_BLOCKS = 43783
@@ -27,18 +28,13 @@ class BlockDevice(object):
         self.socketpair = socket.socketpair()
         self.nbd = os.open(device, os.O_RDWR)
         ioctl(self.nbd, NBD_SET_BLKSIZE, BLOCK_SIZE)
-        block_count = size / BLOCK_SIZE
-        ioctl(self.nbd, NBD_SET_SIZE_BLOCKS, block_count)
+        ioctl(self.nbd, NBD_SET_SIZE_BLOCKS, size / BLOCK_SIZE)
         ioctl(self.nbd, NBD_SET_SOCK, self.socketpair[0].fileno())
-        self.thread = threading.Thread(target=self._do_it)
-        self.thread.daemon = True
-        self.thread.start()
-
-    def _do_it(self):
-        ioctl(self.nbd, NBD_DO_IT)
 
     def serve(self):
-        REQUEST_LEN = struct.calcsize('!II8sQI')
+        thread = threading.Thread(target=lambda: ioctl(self.nbd, NBD_DO_IT))
+        thread.daemon = True
+        thread.start()
         try:
             while True:
                 magic, op, handle, offset, length = struct.unpack('!II8sQI',

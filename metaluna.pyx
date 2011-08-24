@@ -1,6 +1,4 @@
 #!/usr/bin/python
-import struct
-import sys
 import os
 import socket
 import threading
@@ -11,18 +9,18 @@ BLOCK_SIZE = 4096
 cdef extern from 'nbd.h':
     int NBD_SET_SOCK, NBD_SET_BLKSIZE, NBD_SET_SIZE, NBD_DO_IT,\
         NBD_CLEAR_SOCK, NBD_CLEAR_QUE, NBD_PRINT_DEBUG,\
-        NBD_SET_SIZE_BLOCKS, NBD_DISCONNECT, NBD_SET_TIMEOUT
+        NBD_SET_SIZE_BLOCKS, NBD_DISCONNECT
     int NBD_CMD_READ, NBD_CMD_WRITE, NBD_CMD_DISC
     int NBD_REQUEST_MAGIC, NBD_REPLY_MAGIC
     struct nbd_request:
         unsigned int magic
-        int op
+        unsigned int op
         char handle[8]
-        long offset
-        int length
+        unsigned long offset
+        unsigned int length
     struct nbd_reply:
         unsigned int magic
-        int error
+        unsigned int error
         char handle[8]
 
 cdef extern from 'arpa/inet.h':
@@ -32,8 +30,8 @@ cdef extern from 'sys/ioctl.h':
     int ioctl(int d, int request, ...) nogil
 
 cdef extern from 'unistd.h':
-    int read(int fd, void *buf, int count) nogil
-    int write(int fd, void *buf, int count) nogil
+    int read(int fd, void *buf, int count)
+    int write(int fd, void *buf, int count)
 
 cdef extern from 'string.h':
     void *memcpy(void *dest, void *src, int n)

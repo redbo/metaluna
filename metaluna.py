@@ -29,29 +29,33 @@ class BlockDevice(object):
         ioctl(self.nbd, NBD_SET_BLKSIZE, BLOCK_SIZE)
         ioctl(self.nbd, NBD_SET_SIZE_BLOCKS, size / BLOCK_SIZE)
         ioctl(self.nbd, NBD_SET_SOCK, self.srv.fileno())
-
-    def serve(self):
         thread = threading.Thread(target=lambda: ioctl(self.nbd, NBD_DO_IT))
         thread.daemon = True
         thread.start()
+
+    def serve(self):
         try:
             while True:
-                magic, op, handle, offset, length = struct.unpack('!II8sQI',
-                                        self.cli.recv(REQUEST_LEN))
-                errno = 0
-                if magic != NBD_REQUEST_MAGIC:
-                    raise Exception('INVALID MAGIC')
-                elif op == NBD_CMD_READ:
-                    data = self.read(offset, length)
-                elif op == NBD_CMD_WRITE:
-                    self.write(offset, self.cli.recv(length))
+                try:
+                    magic, op, handle, offset, length = struct.unpack('!II8sQI',
+                                            self.cli.recv(REQUEST_LEN))
+                    errno = 0
                     data = ''
-                elif op == NBD_CMD_DISC:
-                    raise Exception('DISCONNECT REQUEST')
-                else:
-                    raise Exception('UNKNOWN TYPE %s' % op)
-                self.cli.sendall(struct.pack('!II8s',
-                            NBD_REPLY_MAGIC, errno, handle) + data)
+                    if magic != NBD_REQUEST_MAGIC:
+                        raise Exception('INVALID MAGIC')
+                    elif op == NBD_CMD_READ:
+                        data = self.read(offset, length)
+                    elif op == NBD_CMD_WRITE:
+                        self.write(offset, self.cli.recv(length))
+                    elif op == NBD_CMD_DISC:
+                        raise Exception('DISCONNECT REQUEST')
+                    else:
+                        raise Exception('UNKNOWN TYPE %s' % op)
+                    self.cli.sendall(struct.pack('!II8s',
+                                NBD_REPLY_MAGIC, errno, handle) + data)
+                except (IOError, OSError), e:
+                    self.cli.sendall(struct.pack('!II8s', NBD_REPLY_MAGIC,
+                            e.errno, handle))
         finally:
             ioctl(self.nbd, NBD_CLEAR_QUE)
             ioctl(self.nbd, NBD_CLEAR_SOCK)

@@ -1,0 +1,2 @@
+This is a python library that lets you create userland virtual block devices by
+hijacking the NBD kernel module.  It's mostly for playing around.

@@ -30,11 +30,9 @@ class Volume(object):
         block_count = size / BLOCK_SIZE
         ioctl(self.nbd, NBD_SET_SIZE_BLOCKS, block_count)
         ioctl(self.nbd, NBD_SET_SOCK, self.socketpair[0].fileno())
-        print "starting"
         self.thread = threading.Thread(target=self._do_it)
         self.thread.daemon = True
         self.thread.start()
-        print "started"
 
     def _do_it(self):
         ioctl(self.nbd, NBD_DO_IT)
@@ -66,8 +64,8 @@ class Volume(object):
             self.socketpair[1].close()
 
     def read(self, offset, length):
-        return 'Z' * length
+        raise NotImplementedError()
 
     def write(self, offset, buf):
-        pass
+        raise NotImplementedError()
 

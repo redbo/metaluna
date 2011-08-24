@@ -62,6 +62,7 @@ class BlockDevice(object):
                     cli.sendall(struct.pack('!II8s', NBD_REPLY_MAGIC,
                             e.errno, handle))
         finally:
+            ioctl(nbd, NBD_DISCONNECT)
             ioctl(nbd, NBD_CLEAR_QUE)
             ioctl(nbd, NBD_CLEAR_SOCK)
             os.close(nbd)

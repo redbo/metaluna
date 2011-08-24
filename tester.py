@@ -8,6 +8,6 @@ class MyBlockDevice(BlockDevice):
     def write(self, offset, buf):
         print 'write:', buf
 
-x = MyBlockDevice(8192, '/dev/nbd0')
+x = MyBlockDevice(8192, '/dev/nbd2')
 x.serve()
 

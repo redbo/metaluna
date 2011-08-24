@@ -7,19 +7,22 @@ import struct
 
 BLOCK_SIZE = 4096
 
+NBD_REQUEST_LEN = struct.calcsize('!II8sQI')
 NBD_REQUEST_MAGIC = 0x25609513
 NBD_REPLY_MAGIC = 0x67446698
 NBD_CMD_READ = 0
 NBD_CMD_WRITE = 1
 NBD_CMD_DISC = 2
-REQUEST_LEN = struct.calcsize('!II8sQI')
 
-NBD_SET_BLKSIZE = 43777
-NBD_SET_SIZE_BLOCKS = 43783
 NBD_SET_SOCK = 43776
+NBD_SET_BLKSIZE = 43777
+NBD_SET_SIZE = 43778
 NBD_DO_IT = 43779
-NBD_CLEAR_QUE = 43781
 NBD_CLEAR_SOCK = 43780
+NBD_CLEAR_QUE = 43781
+NBD_PRINT_DEBUG = 43782
+NBD_SET_SIZE_BLOCKS = 43783
+NBD_DISCONNECT = 43784
 
 
 class BlockDevice(object):
@@ -40,7 +43,7 @@ class BlockDevice(object):
             while True:
                 try:
                     magic, op, handle, offset, length = struct.unpack('!II8sQI',
-                                            cli.recv(REQUEST_LEN))
+                                            cli.recv(NBD_REQUEST_LEN))
                     errno = 0
                     data = ''
                     if magic != NBD_REQUEST_MAGIC:

@@ -7,6 +7,6 @@ class MyVolume(BlockDevice):
     def write(self, offset, buf):
         pass
 
-x = MyVolume(8192, '/dev/nbd10')
+x = MyVolume(8192, '/dev/nbd11')
 x.serve()
 

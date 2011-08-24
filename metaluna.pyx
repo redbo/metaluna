@@ -91,3 +91,5 @@ class BlockDevice(object):
     def write(self, offset, buf):
         raise NotImplementedError()
 
+print NBD_DISCONNECT
+

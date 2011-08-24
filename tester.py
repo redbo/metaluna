@@ -1,12 +1,13 @@
 from metaluna import BlockDevice
 
-class MyVolume(BlockDevice):
+class MyBlockDevice(BlockDevice):
     def read(self, offset, length):
+        print 'read', length
         return 'Z' * length
 
     def write(self, offset, buf):
-        pass
+        print 'write:', buf
 
-x = MyVolume(8192, '/dev/nbd11')
+x = MyBlockDevice(8192, '/dev/nbd0')
 x.serve()
 

@@ -36,7 +36,7 @@ cdef extern from 'unistd.h':
 cdef extern from 'string.h':
     void *memcpy(void *dest, void *src, int n)
 
-class Volume(object):
+class BlockDevice(object):
     def __init__(self, size, device='/dev/nbd0'):
         self.socketpair = socket.socketpair()
         self.nbd = os.open(device, os.O_RDWR)
@@ -87,8 +87,8 @@ class Volume(object):
             self.socketpair[1].close()
 
     def read(self, offset, length):
-        return 'Z' * length
+        raise NotImplementedError()
 
     def write(self, offset, buf):
-        pass
+        raise NotImplementedError()
 

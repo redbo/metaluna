@@ -22,7 +22,7 @@ NBD_CLEAR_QUE = 43781
 NBD_CLEAR_SOCK = 43780
 
 
-class Volume(object):
+class BlockDevice(object):
     def __init__(self, size, device='/dev/nbd0'):
         self.socketpair = socket.socketpair()
         self.nbd = os.open(device, os.O_RDWR)

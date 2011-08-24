@@ -24,21 +24,23 @@ NBD_CLEAR_SOCK = 43780
 
 class BlockDevice(object):
     def __init__(self, size, device='/dev/nbd0'):
-        self.cli, self.srv = socket.socketpair()
-        self.nbd = os.open(device, os.O_RDWR)
-        ioctl(self.nbd, NBD_SET_BLKSIZE, BLOCK_SIZE)
-        ioctl(self.nbd, NBD_SET_SIZE_BLOCKS, size / BLOCK_SIZE)
-        ioctl(self.nbd, NBD_SET_SOCK, self.srv.fileno())
-        thread = threading.Thread(target=lambda: ioctl(self.nbd, NBD_DO_IT))
-        thread.daemon = True
-        thread.start()
+        self.size = size
+        self.device = device
 
     def serve(self):
+        cli, srv = socket.socketpair()
+        nbd = os.open(self.device, os.O_RDWR)
+        ioctl(nbd, NBD_SET_BLKSIZE, BLOCK_SIZE)
+        ioctl(nbd, NBD_SET_SIZE_BLOCKS, self.size / BLOCK_SIZE)
+        ioctl(nbd, NBD_SET_SOCK, srv.fileno())
+        thread = threading.Thread(target=lambda: ioctl(nbd, NBD_DO_IT))
+        thread.daemon = True
+        thread.start()
         try:
             while True:
                 try:
                     magic, op, handle, offset, length = struct.unpack('!II8sQI',
-                                            self.cli.recv(REQUEST_LEN))
+                                            cli.recv(REQUEST_LEN))
                     errno = 0
                     data = ''
                     if magic != NBD_REQUEST_MAGIC:
@@ -46,21 +48,22 @@ class BlockDevice(object):
                     elif op == NBD_CMD_READ:
                         data = self.read(offset, length)
                     elif op == NBD_CMD_WRITE:
-                        self.write(offset, self.cli.recv(length))
+                        self.write(offset, cli.recv(length))
                     elif op == NBD_CMD_DISC:
                         raise Exception('DISCONNECT REQUEST')
                     else:
                         raise Exception('UNKNOWN TYPE %s' % op)
-                    self.cli.sendall(struct.pack('!II8s',
+                    cli.sendall(struct.pack('!II8s',
                                 NBD_REPLY_MAGIC, errno, handle) + data)
                 except (IOError, OSError), e:
-                    self.cli.sendall(struct.pack('!II8s', NBD_REPLY_MAGIC,
+                    cli.sendall(struct.pack('!II8s', NBD_REPLY_MAGIC,
                             e.errno, handle))
         finally:
-            ioctl(self.nbd, NBD_CLEAR_QUE)
-            ioctl(self.nbd, NBD_CLEAR_SOCK)
-            self.cli.close()
-            self.srv.close()
+            ioctl(nbd, NBD_CLEAR_QUE)
+            ioctl(nbd, NBD_CLEAR_SOCK)
+            os.close(nbd)
+            cli.close()
+            srv.close()
 
     def read(self, offset, length):
         raise NotImplementedError()

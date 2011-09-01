@@ -13,6 +13,7 @@ import struct
 
 BLOCK_SIZE = 4096
 
+# constants cribbed from nbd.h
 NBD_REQUEST_LEN = struct.calcsize('!II8sQI')
 NBD_REQUEST_MAGIC = 0x25609513
 NBD_REPLY_MAGIC = 0x67446698
@@ -37,11 +38,16 @@ class BlockDevice(object):
         self.device = device
 
     def serve(self):
+        """
+        Event loop that drives the NBD kernel module.
+        It will not exit.
+        """
         cli, srv = socket.socketpair()
         nbd = os.open(self.device, os.O_RDWR)
         ioctl(nbd, NBD_SET_BLKSIZE, BLOCK_SIZE)
         ioctl(nbd, NBD_SET_SIZE_BLOCKS, self.size / BLOCK_SIZE)
         ioctl(nbd, NBD_SET_SOCK, srv.fileno())
+        # this thread should exit when NBD_DISCONNECT is sent
         thread = threading.Thread(target=lambda: ioctl(nbd, NBD_DO_IT))
         thread.daemon = True
         thread.start()

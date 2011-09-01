@@ -1,3 +1,9 @@
+"""
+This is a python class that implements virtual block devices by driving the
+NBD kernel module directly.  It's meant for you to subclass and override
+read and write, then call instantiate it and call .serve().
+"""
+
 import os
 import socket
 import threading

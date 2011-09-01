@@ -1,3 +1,10 @@
+"""
+I was using this to test the performance of NBD virtual block devices by
+creating a loopback to a physical disk.
+
+It's difficult to impossible to use direct i/o from Python without bindings.
+"""
+
 import os
 
 cdef extern from 'stdlib.h':

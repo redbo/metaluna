@@ -47,7 +47,9 @@ class BlockDevice(object):
         cli, srv = socket.socketpair()
         nbd = os.open(self.device, os.O_RDWR)
         ioctl(nbd, NBD_SET_BLKSIZE, self.block_size)
-        ioctl(nbd, NBD_SET_SIZE_BLOCKS, self.size / self.block_size)
+        block_count = struct.unpack('i', struct.pack('I',
+                        self.size / self.block_size))[0]
+        ioctl(nbd, NBD_SET_SIZE_BLOCKS, block_count)
         ioctl(nbd, NBD_SET_SOCK, srv.fileno())
         # this thread should exit when NBD_DISCONNECT is sent
         thread = threading.Thread(target=lambda: ioctl(nbd, NBD_DO_IT))

@@ -11,7 +11,7 @@ from fcntl import ioctl
 import struct
 
 
-BLOCK_SIZE = 4096
+DEFAULT_BLOCK_SIZE = 4096
 
 # constants cribbed from nbd.h
 NBD_REQUEST_LEN = struct.calcsize('!II8sQI')
@@ -33,6 +33,8 @@ NBD_DISCONNECT = 43784
 
 
 class BlockDevice(object):
+    block_size = DEFAULT_BLOCK_SIZE
+
     def __init__(self, size, device='/dev/nbd0'):
         self.size = size
         self.device = device
@@ -44,8 +46,8 @@ class BlockDevice(object):
         """
         cli, srv = socket.socketpair()
         nbd = os.open(self.device, os.O_RDWR)
-        ioctl(nbd, NBD_SET_BLKSIZE, BLOCK_SIZE)
-        ioctl(nbd, NBD_SET_SIZE_BLOCKS, self.size / BLOCK_SIZE)
+        ioctl(nbd, NBD_SET_BLKSIZE, self.block_size)
+        ioctl(nbd, NBD_SET_SIZE_BLOCKS, self.size / self.block_size)
         ioctl(nbd, NBD_SET_SOCK, srv.fileno())
         # this thread should exit when NBD_DISCONNECT is sent
         thread = threading.Thread(target=lambda: ioctl(nbd, NBD_DO_IT))

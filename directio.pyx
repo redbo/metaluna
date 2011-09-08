@@ -20,17 +20,18 @@ cdef extern from 'string.h':
     void *memcpy(char *, char *, int)
 
 cdef class DirectFile:
-    cdef int fd
+    cdef int fd, align
 
-    def __init__(self, path):
+    def __init__(self, path, align=4096):
         self.fd = os.open(path, os.O_DIRECT | os.O_RDWR)
+        self.align = align
 
     def __dealloc__(self):
         os.close(self.fd)
 
     def pread(self, offset, len):
         cdef char *buf
-        posix_memalign(&buf, 4096, len)
+        posix_memalign(&buf, self.align, len)
         read_amt = pread(self.fd, buf, len, offset)
         if read_amt < 0:
             raise OSError(errno, 'Error Reading')
@@ -40,7 +41,7 @@ cdef class DirectFile:
 
     def pwrite(self, offset, buf):
         cdef char *buf2
-        posix_memalign(&buf2, 4096, len(buf))
+        posix_memalign(&buf2, self.align, len(buf))
         memcpy(buf2, buf, len(buf))
         write_amt = pwrite(self.fd, buf2, len(buf), offset)
         if write_amt < 0:

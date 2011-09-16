@@ -32,7 +32,7 @@ cdef class DirectFile:
     def __dealloc__(self):
         os.close(self.fd)
 
-    def pread(self, int offset, int length):
+    def pread(self, offset, length):
         cdef char *buf
         cdef int read_amt
         with nogil:

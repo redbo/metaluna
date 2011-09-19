@@ -55,6 +55,7 @@ cdef class DirectFile:
             free(buf2)
         if write_amt < 0:
             raise OSError(errno, 'Error writing')
+        return write_amt
 
     def __len__(self):
         return os.lseek(self.fd, 0, os.SEEK_END)
